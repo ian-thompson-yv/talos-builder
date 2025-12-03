@@ -54,8 +54,6 @@ checkouts-clean:
 	rm -rf "$(CHECKOUTS_DIRECTORY)/talos"
 	rm -rf "$(CHECKOUTS_DIRECTORY)/sbc-raspberrypi5"
 
-
-
 #
 # Patches
 #
@@ -65,6 +63,8 @@ patches-pkgs:
 		git am "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0001-Patched-for-Raspberry-Pi-5.patch"
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		git apply $(PATCHES_DIRECTORY)/siderolabs/pkgs/0003-nf-bridge.patch
+	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
+		git apply $(PATCHES_DIRECTORY)/siderolabs/pkgs/0004-Makefile.patch
 
 patches-talos:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
@@ -72,13 +72,13 @@ patches-talos:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		git apply "$(PATCHES_DIRECTORY)/siderolabs/talos/0002-Makefile.patch"
 
-patches-pi5: patches-pkgs patches-talos
+patches-pi5: checkouts-clean checkouts patches-pkgs patches-talos
 
 patches-pkgs-4:
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		git apply "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0002-Patched-for-Raspberry-Pi-4.patch"
 
-patches-pi4: patches-pkgs patches-pkgs-4 patches-talos
+patches-pi4: checkouts-clean checkouts patches-pkgs patches-pkgs-4 patches-talos
 
 #
 # Kernel
@@ -88,7 +88,7 @@ kernel:
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		$(MAKE) \
 			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
-			PLATFORM=linux/arm64 \
+			PLATFORM=linux/arm64 SED=$(SED) \
 			kernel
 
 #

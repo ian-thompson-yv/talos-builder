@@ -1,0 +1,45 @@
+diff --git a/Makefile b/Makefile
+index 9acad83..db38fa8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -4,6 +4,7 @@
+ 
+ # common variables
+ 
++SED ?= sed
+ SHA := $(shell git describe --match=none --always --abbrev=8 --dirty)
+ TAG := $(shell git describe --tag --always --dirty --match v[0-9]\*)
+ ABBREV_TAG := $(shell git describe --tags >/dev/null 2>/dev/null && git describe --tag --always --match v[0-9]\* --abbrev=0 || echo 'undefined')
+@@ -11,7 +12,7 @@ BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+ ARTIFACTS := _out
+ IMAGE_TAG ?= $(TAG)
+ OPERATING_SYSTEM := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+-GOARCH := $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
++GOARCH := $(shell uname -m | $(SED) 's/x86_64/amd64/' | $(SED) 's/aarch64/arm64/')
+ REGISTRY ?= ghcr.io
+ USERNAME ?= siderolabs
+ REGISTRY_AND_USERNAME ?= $(REGISTRY)/$(USERNAME)
+@@ -41,6 +42,9 @@ COMMON_ARGS += --provenance=false
+ COMMON_ARGS += --progress=$(PROGRESS)
+ COMMON_ARGS += --platform=$(PLATFORM)
+ COMMON_ARGS += --build-arg=SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH)
++CACHE_REGISTRY ?= autinf-build-cache.dev.youview.co.uk
++CACHE_REGISTRY_AND_USERNAME ?= $(CACHE_REGISTRY)/$(USERNAME)
++CACHE_TAG ?= kernel_cache
+ 
+ # targets defines all the available targets
+ 
+@@ -193,7 +197,7 @@ nonfree: $(NONFREE_TARGETS)  ## Builds all nonfree targets defined.
+ 
+ .PHONY: $(TARGETS) $(NONFREE_TARGETS)
+ $(TARGETS) $(NONFREE_TARGETS):
+-	@$(MAKE) docker-$@ TARGET_ARGS="--tag=$(REGISTRY_AND_USERNAME)/$@:$(TAG) --push=$(PUSH)"
++	@$(MAKE) docker-$@ TARGET_ARGS="--tag=$(REGISTRY_AND_USERNAME)/$@:$(TAG) --cache-from=$(CACHE_REGISTRY_AND_USERNAME)/$@:$(CACHE_TAG) --cache-to=$(CACHE_REGISTRY_AND_USERNAME)/$@:$(CACHE_TAG) --push=$(PUSH)"
+ 
+ .PHONY: deps.png
+ deps.png:  ## Generates a dependency graph of the Pkgfile.
+@@ -228,4 +232,3 @@ release-notes: $(ARTIFACTS)
+ conformance:
+ 	@docker pull $(CONFORMANCE_IMAGE)
+ 	@docker run --rm -it -v $(PWD):/src -w /src $(CONFORMANCE_IMAGE) enforce
+-
