@@ -23,10 +23,6 @@ SBCOVERLAY_REPOSITORY = https://github.com/talos-rpi5/sbc-raspberrypi5.git
 CHECKOUTS_DIRECTORY := $(PWD)/checkouts
 PATCHES_DIRECTORY := $(PWD)/patches
 
-PKGS_TAG = $(shell cd $(CHECKOUTS_DIRECTORY)/pkgs && git describe --tag --always --dirty --match v[0-9]\*)
-TALOS_TAG = $(shell cd $(CHECKOUTS_DIRECTORY)/talos && git describe --tag --always --dirty --match v[0-9]\*)
-SBCOVERLAY_TAG = $(shell cd $(CHECKOUTS_DIRECTORY)/sbc-raspberrypi5 && git describe --tag --always --dirty)-$(PKGS_TAG)
-
 #
 # Help
 #
@@ -88,7 +84,7 @@ kernel:
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		$(MAKE) \
 			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
-			PLATFORM=linux/arm64 \
+			PLATFORM=linux/arm64 TAG=$(TAG)\
 			kernel
 
 #
@@ -96,11 +92,10 @@ kernel:
 #
 .PHONY: overlay
 overlay:
-	@echo SBCOVERLAY_TAG = $(SBCOVERLAY_TAG)
 	cd "$(CHECKOUTS_DIRECTORY)/sbc-raspberrypi5" && \
 		$(MAKE) \
-			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) IMAGE_TAG=$(SBCOVERLAY_TAG) PUSH=$(PUSH) \
-			PKGS_PREFIX=$(REGISTRY)/$(REGISTRY_USERNAME) PKGS=$(PKGS_TAG) \
+			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) IMAGE_TAG=$(TAG) PUSH=$(PUSH) \
+			PKGS_PREFIX=$(REGISTRY)/$(REGISTRY_USERNAME) PKGS=$(TAG) \
 			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 \
 			sbc-raspberrypi5
 
@@ -109,8 +104,8 @@ imager:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		$(MAKE) \
 			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
-			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(PKGS_TAG) \
-			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) \
+			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(TAG) \
+			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) IMAGE_TAG=$(TAG) \
 			imager
 
 .PHONY: installer-base
@@ -118,8 +113,8 @@ installer-base:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		$(MAKE) \
 			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
-			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(PKGS_TAG) \
-			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) \
+			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(TAG) \
+			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) IMAGE_TAG=$(TAG) \
 			installer-base
 
 .PHONY: kern_initramfs
@@ -127,7 +122,7 @@ kern_initramfs:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		$(MAKE) \
 			REGISTRY=$(REGISTRY) USERNAME=$(REGISTRY_USERNAME) PUSH=$(PUSH) \
-			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(PKGS_TAG) \
+			PKG_KERNEL=$(REGISTRY)/$(REGISTRY_USERNAME)/kernel:$(TAG) \
 			INSTALLER_ARCH=arm64 PLATFORM=linux/arm64 SED=$(SED) \
 			kernel initramfs
 
@@ -140,11 +135,11 @@ kern_initramfs:
 installer-pi5:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		docker \
-			run --rm -t -v ./_out:/out -v /dev:/dev --privileged $(REGISTRY)/$(REGISTRY_USERNAME)/imager:$(TALOS_TAG) \
+			run --rm -t -v ./_out:/out -v /dev:/dev --privileged $(REGISTRY)/$(REGISTRY_USERNAME)/imager:$(TAG) \
 			$(ASSET_TYPE) --arch arm64 \
-			--base-installer-image="$(REGISTRY)/$(REGISTRY_USERNAME)/installer-base:$(TALOS_TAG)" \
+			--base-installer-image="$(REGISTRY)/$(REGISTRY_USERNAME)/installer-base:$(TAG)" \
 			--overlay-name="rpi5" \
-			--overlay-image="$(REGISTRY)/$(REGISTRY_USERNAME)/sbc-raspberrypi5:$(SBCOVERLAY_TAG)" \
+			--overlay-image="$(REGISTRY)/$(REGISTRY_USERNAME)/sbc-raspberrypi5:$(TAG)" \
     		--system-extension-image autinf-registry-dev.dev.youview.co.uk/autinf/talos/yvrig-control:universal
 
 
@@ -152,9 +147,9 @@ installer-pi5:
 installer-pi4:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		docker \
-			run --rm -t -v ./_out:/out -v /dev:/dev --privileged $(REGISTRY)/$(REGISTRY_USERNAME)/imager:$(TALOS_TAG) \
+			run --rm -t -v ./_out:/out -v /dev:/dev --privileged $(REGISTRY)/$(REGISTRY_USERNAME)/imager:$(TAG) \
 			$(ASSET_TYPE) --arch arm64 \
-			--base-installer-image="$(REGISTRY)/$(REGISTRY_USERNAME)/installer-base:$(TALOS_TAG)" \
+			--base-installer-image="$(REGISTRY)/$(REGISTRY_USERNAME)/installer-base:$(TAG)" \
 			--overlay-name="rpi_generic" \
 			--overlay-image="autinf-registry-dev.dev.youview.co.uk/siderolabs/sbc-raspberrypi:v0.1.5" \
 			--overlay-option="configTxtAppend=$(CONFIG_TXT)" \
@@ -165,17 +160,17 @@ installer-pi4:
 #
 .PHONY: release
 release:
-	docker pull $(REGISTRY)/$(REGISTRY_USERNAME)/installer:$(TALOS_TAG) && \
-		docker tag $(REGISTRY)/$(REGISTRY_USERNAME)/installer:$(TALOS_TAG) $(REGISTRY)/$(REGISTRY_USERNAME)/installer:$(TAG) && \
+	docker pull $(REGISTRY)/$(REGISTRY_USERNAME)/installer:$(TAG) && \
+		docker tag $(REGISTRY)/$(REGISTRY_USERNAME)/installer:$(TAG) $(REGISTRY)/$(REGISTRY_USERNAME)/installer:$(TAG) && \
 		docker push $(REGISTRY)/$(REGISTRY_USERNAME)/installer:$(TAG)
 
 
 
 .PHONY: pi5
-pi5: checkouts-clean checkouts patches-pi5 kernel kern_initramfs installer-base imager overlay installer-pi5
+pi5: checkouts-clean checkouts patches-pi5 kernel kern_initramfs installer-base imager overlay
 
 .PHONY: pi4
-pi4: checkouts-clean checkouts patches-pi4 kernel kern_initramfs installer-base imager installer-pi4
+pi4: checkouts-clean checkouts patches-pi4 kernel kern_initramfs installer-base imager
 
 #
 # Clean

@@ -38,18 +38,34 @@ If you'd like to make modifications, it is possible to create your own build. Be
 On a Mac use `gmake` not `make` and set `SED=gsed` on the command line
 
 ```
-# To build all assets from the kernel up to the installer for the RPi4
-make RPI_MODEL=<model> pi4
+# To build all assets from the kernel up to (not including the installer) for the RPi4
+make RPI_MODEL=rpi4 pi4
 
-# For the pi5 installer image
-make RPI_MODEL=<model> pi5
+# For the pi4 installer image
+make RPI_MODEL=rpi4 pi4-installer
 
-# For the pi5 installer image on Mac
-gmake RPI_MODEL=<model> SED=gsed pi5
+# Similarly for the pi5
+make RPI_MODEL=rpi5 pi5
+make RPI_MODEL=rpi5 pi5-installer
+
+# For the builds on Mac
+gmake RPI_MODEL=<model> SED=gsed <TARGET>
 
 # To make SD card images set ASSET_TYPE=metal
-make RPI_MODEL=<model> ASSET_TYPE=metal pi5
+make RPI_MODEL=<model> [SED=gsed] ASSET_TYPE=metal <TARGET>
 ```
+
+### Production builds
+
+Production installer and boot drive images should be built using the [talos-k8s](https://github.dev.youview.co.uk/autinf/talos-k8s) repo and the build profiles specified under th4 `talos-images` directory.
+
+1. A commit on the main branch of this repo should be tagged with a version and then the pre-requisite iamges built and pushed (the build target `pi4` or `pi5`). This should push tagged images for the `imager`, `installer-base` and the pi5 overlay if needed.
+
+1. In `talos-k8s` the build profiles should be updated with the new tag for the installer-base and (for pi5) overlay.
+
+1. In `talos-k8s` the `build-assets.sh` script should be updated with the new imager tag.
+
+1. Build according to the instructions in the `talos-k8s` repo.
 
 ## License
 See [LICENSE](LICENSE).
