@@ -53,7 +53,7 @@ checkouts-clean:
 #
 # Patches
 #
-.PHONY: patches-pkgs patches-talos patches patches-pkgs-4 patches-pi4
+.PHONY: patches-pkgs patches-overlay patches-talos patches patches-pkgs-4 patches-pi4
 patches-pkgs:
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		git am "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0001-Patched-for-Raspberry-Pi-5.patch"
@@ -62,13 +62,17 @@ patches-pkgs:
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		git apply $(PATCHES_DIRECTORY)/siderolabs/pkgs/0004-Makefile.patch
 
+patches-overlay:
+	cd "$(CHECKOUTS_DIRECTORY)/sbc-raspberrypi5" && \
+		git apply $(PATCHES_DIRECTORY)/siderolabs/sbc-raspberrypi5/0001-uboot.patch
+
 patches-talos:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		git am "$(PATCHES_DIRECTORY)/siderolabs/talos/0001-Patched-for-Raspberry-Pi-5.patch"
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		git apply "$(PATCHES_DIRECTORY)/siderolabs/talos/0002-Makefile.patch"
 
-patches-pi5: checkouts-clean checkouts patches-pkgs patches-talos
+patches-pi5: checkouts-clean checkouts patches-pkgs patches-overlay patches-talos
 
 patches-pkgs-4:
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \

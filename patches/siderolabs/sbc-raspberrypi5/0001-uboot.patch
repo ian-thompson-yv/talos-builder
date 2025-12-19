@@ -1,0 +1,30 @@
+diff --git a/Pkgfile b/Pkgfile
+index 4c187ba..4958616 100644
+--- a/Pkgfile
++++ b/Pkgfile
+@@ -9,9 +9,9 @@ vars:
+   raspberrypi_firmware_sha512: 3fa11d97dbb5c504c4f85ffcb5ac33f73d4d6d9c0dad67eaae1d5f734d4b096e7add29d42ba8de254fe242d81ca4c053a8df1482d069700014915ef80b7b3036
+ 
+   # renovate: datasource=github-tags depName=talos-rpi5/u-boot
+-  uboot_version: v2025.04-rpi5-3
+-  uboot_sha256: 08db96c0288ee33cd2e96c6d866ef85e5fafcb6a333ca0966a49c7a249786e7e
+-  uboot_sha512: 942235f484c704c8e1c38561598993c53834348bfca9fcdfabfb96bc2484651348af8fe6422aeeeb868922177af1f30db72a4da9ad89e4ac0d219ed365925696
++  uboot_version: u-boot
++  uboot_sha256: 72645bc18f45f0879edc11daddfe193cb259fe9efb819a65ca742c8303cf3ee0
++  uboot_sha512: 678022e33ffca9e3f731f7495ba9ffff78369c269ab0c8faf3eafa6b4ab69c76717a15c9df50299165f33aa8eee1f659de8b16fff5172d428d797d7b49f3d39b
+ 
+ labels:
+   org.opencontainers.image.source: https://github.com/talos-rpi5/sbc-raspberrypi5
+diff --git a/artifacts/u-boot/pkg.yaml b/artifacts/u-boot/pkg.yaml
+index 9d580a0..960ea2e 100644
+--- a/artifacts/u-boot/pkg.yaml
++++ b/artifacts/u-boot/pkg.yaml
+@@ -5,7 +5,7 @@ dependencies:
+   - stage: base
+ steps:
+   - sources:
+-      - url: https://github.com/talos-rpi5/u-boot/archive/refs/tags/{{ .uboot_version }}.tar.gz
++      - url: https://s3manager.autinf.dev.youview.co.uk/autinf/api/buckets/talos-uboot/objects/u-boot.tar.gz
+         destination: u-boot.tar.gz
+         sha256: "{{ .uboot_sha256 }}"
+         sha512: "{{ .uboot_sha512 }}"
