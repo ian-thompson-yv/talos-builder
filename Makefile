@@ -8,7 +8,7 @@ REGISTRY ?= autinf-registry-dev.dev.youview.co.uk
 ifndef RPI_MODEL
 $(error RPI_MODEL is required but not set, ie rpi5 or rpi4)
 endif
-REGISTRY_USERNAME := talos-$(RPI_MODEL)
+REGISTRY_USERNAME := autinf/talos-$(RPI_MODEL)
 TAG ?= $(shell git describe --tags --exact-match)
 
 SED ?= sed
@@ -58,7 +58,7 @@ patches-pkgs:
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		git am "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0001-Patched-for-Raspberry-Pi-5.patch"
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
-		git apply $(PATCHES_DIRECTORY)/siderolabs/pkgs/0003-nf-bridge.patch
+		git apply $(PATCHES_DIRECTORY)/siderolabs/pkgs/0003-kernel-modules.patch
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		git apply $(PATCHES_DIRECTORY)/siderolabs/pkgs/0004-Makefile.patch
 
